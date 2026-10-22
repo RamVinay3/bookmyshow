@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -51,7 +52,11 @@ public class MovieClient {
     private MovieResponse movieFallback(
             Long movieId,
             Throwable exception) {
-
+         // [Spring Circuit Breaker proxy Box[ Retry proxy Box [ actual Error
+        // if any error comes from the actual error and it was considered under retry it will execute
+        //otherwise it will go to spring circuit Breaker fallback method and then send any of the below as error.
+        if(exception instanceof MovieServiceTimeoutException ) throw new MovieServiceTimeoutException(exception.getMessage(),exception);
+        if(exception instanceof MovieNotFoundException) throw new MovieNotFoundException(movieId);
         throw new MovieServiceUnReachableException("Movie Service unreachable from Booking Service");
     }
 }

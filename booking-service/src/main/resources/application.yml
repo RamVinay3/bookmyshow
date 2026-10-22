@@ -32,7 +32,21 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 resilience4j:
+  retry:
+    retryAspectOrder: 401 # represents inner layer as the number is less ,so error comes,it will reach the retry box, then it sees the order either retries or ignore
+    instances:
+      movieService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+
+          - com.example.booking_service.exception.MovieServiceTimeoutException
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+        ignoreExceptions:
+          - com.example.booking_service.exception.MovieNotFoundException
+
   circuitbreaker:
+    circuitBreakerAspectOrder: 400 # represents outer layer as the number is less
     instances:
       movieService:
         slidingWindowType: COUNT_BASED
@@ -44,9 +58,3 @@ resilience4j:
         automaticTransitionFromOpenToHalfOpenEnabled: true
         maxAttempts: 3
         waitDuration: 500ms
-#        retryExceptions:
-#          - org.springframework.web.client.ResourceAccessException
-        ignoreExceptions:
-          - com.example.booking_service.exception.MovieNotFoundException
-          - com.example.booking_service.exception.MovieServiceTimeoutException
-          - com.example.booking_service.exception.MovieServiceUnReachableException
