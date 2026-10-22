@@ -43,7 +43,7 @@ public class MovieService {
         Movie movie= movieRepository.findById(id)
                 .orElseThrow(() ->
                         new MovieNotFoundException(id));
-//        Thread.sleep(4000);
+        Thread.sleep(4000);
         log.info("port:{}",port);
         return movieMapper.entityToResponse(movie);
     }

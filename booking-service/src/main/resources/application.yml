@@ -30,4 +30,23 @@ services:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:7070/eureka/
+      defaultZone: http://localhost:8761/eureka/
+resilience4j:
+  circuitbreaker:
+    instances:
+      movieService:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        maxAttempts: 3
+        waitDuration: 500ms
+#        retryExceptions:
+#          - org.springframework.web.client.ResourceAccessException
+        ignoreExceptions:
+          - com.example.booking_service.exception.MovieNotFoundException
+          - com.example.booking_service.exception.MovieServiceTimeoutException
+          - com.example.booking_service.exception.MovieServiceUnReachableException

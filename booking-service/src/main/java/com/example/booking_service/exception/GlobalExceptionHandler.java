@@ -40,4 +40,11 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
 
+    @ExceptionHandler(MovieServiceUnReachableException.class)
+    public ResponseEntity<String> movieServiceUnReachable(MovieServiceUnReachableException ex,HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ex.getMessage());
+    }
+
+
+
 }

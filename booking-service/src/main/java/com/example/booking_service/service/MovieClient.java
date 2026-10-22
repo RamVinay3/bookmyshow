@@ -4,6 +4,10 @@ import com.example.booking_service.dto.response.MovieResponse;
 import com.example.booking_service.exception.MovieNotFoundException;
 import com.example.booking_service.exception.MovieServiceTimeoutException;
 import java.util.concurrent.TimeoutException;
+
+import com.example.booking_service.exception.MovieServiceUnReachableException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,11 +21,16 @@ import java.time.Duration;
 public class MovieClient {
     private final WebClient webClient;
 
-    public MovieClient(WebClient.Builder builder, @Value("${services.movie.base-url}") String baseUrl){
+    public MovieClient(WebClient.Builder builder,
+                       @Value("${services.movie.base-url}") String baseUrl){
         webClient=builder.baseUrl(baseUrl).build();
     }
-
+    @Retry(name = "movieService")
+    @CircuitBreaker(name="movieService",
+            fallbackMethod = "movieFallback")
     public MovieResponse getMovie(Long id){
+
+        System.out.println("this is actual implementation"+id);
        return this.webClient.get().
                uri("/api/movies/{id}",id)
                 .retrieve().
@@ -39,4 +48,10 @@ public class MovieClient {
                block();
     }
 
+    private MovieResponse movieFallback(
+            Long movieId,
+            Throwable exception) {
+
+        throw new MovieServiceUnReachableException("Movie Service unreachable from Booking Service");
+    }
 }

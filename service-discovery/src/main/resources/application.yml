@@ -2,7 +2,7 @@ spring:
   application:
     name: service-discovery
 server:
-  port: 7070
+  port: 8761
 
 eureka:
   client:
