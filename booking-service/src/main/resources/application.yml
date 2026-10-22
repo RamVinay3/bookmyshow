@@ -1,0 +1,33 @@
+spring:
+
+  application:
+    name: booking-service
+  datasource:
+
+    url: jdbc:oracle:thin:@localhost:1521/FREE
+    username: backend_platform
+    password: backend_password
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: false
+      properties:
+        hibernate:
+          format_sql: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+server:
+  port: 9091
+
+services:
+  movie:
+    base-url: ${MOVIE_SERVICE_URL:http://localhost:9000}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:7070/eureka/

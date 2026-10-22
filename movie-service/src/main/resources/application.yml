@@ -1,0 +1,30 @@
+spring:
+
+  application:
+    name: movie-service
+  datasource:
+
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    username: movie_app
+    password: movieApp@123
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+
+server:
+  port: ${SERVER_PORT:9093}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:7070/eureka/
