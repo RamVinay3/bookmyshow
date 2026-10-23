@@ -8,7 +8,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
+        <module name="theatre-service" />
+        <module name="show-service" />
+        <module name="user-service" />
         <module name="service-discovery" />
+        <module name="wallet-service" />
       </profile>
       <profile name="Annotation profile for booking-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -17,8 +21,17 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
-        <module name="movie-service" />
         <module name="booking-service" />
+      </profile>
+      <profile name="Annotation profile for movie-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+        </processorPath>
+        <module name="movie-service" />
       </profile>
     </annotationProcessing>
   </component>
@@ -28,6 +41,10 @@
       <module name="booking-service" options="-parameters" />
       <module name="movie-service" options="-parameters" />
       <module name="service-discovery" options="-parameters" />
+      <module name="show-service" options="-parameters" />
+      <module name="theatre-service" options="-parameters" />
+      <module name="user-service" options="-parameters" />
+      <module name="wallet-service" options="-parameters" />
     </option>
   </component>
 </project>
