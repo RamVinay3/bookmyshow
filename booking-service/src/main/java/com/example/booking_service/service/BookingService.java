@@ -1,9 +1,11 @@
 package com.example.booking_service.service;
 
+import com.example.booking_service.common.SeatType;
 import com.example.booking_service.dto.request.SeatLockRequest;
 import com.example.booking_service.dto.response.*;
 import com.example.booking_service.entity.ShowSeat;
 import com.example.booking_service.repository.ShowSeatRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +13,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class BookingService {
 
@@ -64,20 +68,60 @@ public class BookingService {
         List<PhysicalSeat> physicalSeats =
                 theatreClient.getSeats(show.screenId());
 
+
         if (physicalSeats == null || physicalSeats.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "No physical seats are configured for this screen");
         }
+        List<SeatTypePrice> configuredPrices =
+                showClient.getSeatPrices(show.id());
+
+        log.info(configuredPrices +" configured Prices");
+
+        if (configuredPrices == null || configuredPrices.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No seat prices configured for this show"
+            );
+        }
+        Map<String, java.math.BigDecimal> priceBySeatType =
+                configuredPrices.stream()
+                        .collect(Collectors.toMap(
+                                SeatTypePrice::seatType,
+                                SeatTypePrice::price
+                        ));
 
         List<ShowSeat> showSeats = physicalSeats.stream()
-                .map(seat -> new ShowSeat(
-                        show.id(),
-                        seat.id(),
-                        seat.rowLabel(),
-                        seat.seatNumber()))
-                .toList();
+                .map(seat -> {
+                    String seatType = seat.seatType();
 
+                    java.math.BigDecimal price =
+                            priceBySeatType.get(seatType);
+
+                    if (price == null) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "No price configured for seat type "
+                                        + seatType
+                                        + " for show "
+                                        + show.id()
+                        );
+                    }
+
+                    return new ShowSeat(
+                            show.id(),
+                            seat.id(),
+                            seat.rowLabel(),
+                            seat.seatNumber(),
+                            SeatType.valueOf(
+                                    seatType
+                            ),
+                            price
+                    );
+                })
+                .toList();
+        log.info(showSeats+ " show seats");
         seatRepository.saveAll(showSeats);
         seatRepository.flush();
     }

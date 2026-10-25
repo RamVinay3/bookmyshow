@@ -3,13 +3,16 @@ package com.example.booking_service.entity;
 
 import com.example.booking_service.common.SeatType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
 
-
+@Getter
+@Setter
 @Entity
 @Table(
         name = "SHOW_SEATS",
@@ -57,44 +60,17 @@ public class ShowSeat {
     }
 
     public ShowSeat(Long showId, Long seatId,
-                    String rowLabel, Integer seatNumber) {
+                    String rowLabel, Integer seatNumber, SeatType seatType,
+                    BigDecimal price) {
         this.showId = showId;
         this.seatId = seatId;
         this.rowLabel = rowLabel;
         this.seatNumber = seatNumber;
+        this.seatType = seatType;
+        this.price = price;
     }
 
-    public Long getId() {
-        return id;
-    }
 
-    public Long getShowId() {
-        return showId;
-    }
-
-    public Long getSeatId() {
-        return seatId;
-    }
-
-    public String getRowLabel() {
-        return rowLabel;
-    }
-
-    public Integer getSeatNumber() {
-        return seatNumber;
-    }
-
-    public SeatStatus getStatus() {
-        return status;
-    }
-
-    public String getLockedBy() {
-        return lockedBy;
-    }
-
-    public LocalDateTime getLockedUntil() {
-        return lockedUntil;
-    }
 
     public void lock(String userId, LocalDateTime expiry) {
         this.status = SeatStatus.LOCKED;
