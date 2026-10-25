@@ -1,7 +1,7 @@
 package com.example.theatreservice.entity;
 
 public enum SeatType {
-    REGULAR,
+    GENERAL,
     PREMIUM,
     RECLINER
 }
