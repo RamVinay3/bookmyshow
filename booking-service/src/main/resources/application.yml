@@ -26,6 +26,10 @@ server:
 services:
   movie:
     base-url: ${MOVIE_SERVICE_URL:http://localhost:9000}
+  show:
+    base-url: ${SHOW_SERVICE_URL:http://localhost:8085}
+  theatre:
+    base-url: ${THEATRE_SERVICE_URL:http://localhost:8084}
 
 eureka:
   client:
