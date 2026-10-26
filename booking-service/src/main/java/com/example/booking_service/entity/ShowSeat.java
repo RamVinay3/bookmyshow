@@ -76,24 +76,24 @@ public class ShowSeat {
 
 
 
-    public void lock(String userId,String bookingId, LocalDateTime expiry) {
-        this.status = SeatStatus.LOCKED;
-        this.lockedBy = userId;
-        this.lockedUntil = expiry;
-        this.bookingId=bookingId;
-    }
-
-    public void release() {
-        this.status = SeatStatus.AVAILABLE;
-        this.lockedBy = null;
-        this.lockedUntil = null;
-        this.bookingId = null;
-    }
-
-    public void book() {
-        this.status = SeatStatus.BOOKED;
-        this.lockedBy = null;
-        this.lockedUntil = null;
-        this.bookingId = null;
-    }
+//    public void lock(String userId,String bookingId, LocalDateTime expiry) {
+//        this.status = SeatStatus.LOCKED;
+//        this.lockedBy = userId;
+//        this.lockedUntil = expiry;
+//        this.bookingId=bookingId;
+//    }
+//
+//    public void release() {
+//        this.status = SeatStatus.AVAILABLE;
+//        this.lockedBy = null;
+//        this.lockedUntil = null;
+//        this.bookingId = null;
+//    }
+//
+//    public void book() {
+//        this.status = SeatStatus.BOOKED;
+//        this.lockedBy = null;
+//        this.lockedUntil = null;
+//
+//    }
 }

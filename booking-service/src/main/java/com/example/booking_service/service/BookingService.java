@@ -5,6 +5,7 @@ import com.example.booking_service.dto.request.SeatLockRequest;
 import com.example.booking_service.dto.response.*;
 import com.example.booking_service.entity.ShowSeat;
 import com.example.booking_service.repository.ShowSeatRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,21 +18,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
+@AllArgsConstructor
 @Service
 public class BookingService {
 
     private final ShowSeatRepository seatRepository;
     private final ShowClient showClient;
     private final TheatreClient theatreClient;
+    private final WalletClient walletClient;
 
-    public BookingService(
-            ShowSeatRepository seatRepository,
-            ShowClient showClient,
-            TheatreClient theatreClient) {
-        this.seatRepository = seatRepository;
-        this.showClient = showClient;
-        this.theatreClient = theatreClient;
-    }
+
 
     @Transactional
     public List<ShowSeatResponse> getSeats(Long showId) {
@@ -119,7 +115,7 @@ public class BookingService {
                                     seatType
                             ),
                             price,
-                            "hi"
+                            null
                     );
                 })
                 .toList();
@@ -207,6 +203,7 @@ public class BookingService {
             );
         }
 
+
         LocalDateTime now = LocalDateTime.now();
 
         for (Long seatId : seatIds) {
@@ -227,5 +224,60 @@ public class BookingService {
                 );
             }
         }
+    }
+
+    public BigDecimal calculateTotalPrice(
+            Long showId,
+            List<Long> seatIds,
+            String userId,
+            String bookingId) {
+
+        if (seatIds == null || seatIds.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "At least one seat is required"
+            );
+        }
+
+        if (new HashSet<>(seatIds).size() != seatIds.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Duplicate seat IDs are not allowed"
+            );
+        }
+
+        List<ShowSeat> seats = seatRepository.findSeatsLockedForBooking(
+                showId,
+                seatIds,
+                userId,
+                bookingId,
+                LocalDateTime.now()
+        );
+
+        if (seats.size() != seatIds.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Some seats are no longer locked by this booking"
+            );
+        }
+
+        return seats.stream()
+                .map(ShowSeat::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transactional
+    public void releaseBookingLocks(
+            Long showId,
+            List<Long> seatIds,
+            String userId,
+            String bookingId) {
+
+        seatRepository.releaseBookingLocks(
+                showId,
+                seatIds,
+                userId,
+                bookingId
+        );
     }
 }

@@ -30,6 +30,8 @@ services:
     base-url: ${SHOW_SERVICE_URL:http://show-service}
   theatre:
     base-url: ${THEATRE_SERVICE_URL:http://theatre-service}
+  wallet:
+    base-url: ${WALLET_SERVICE_URL:http://wallet-service}
 
 eureka:
   client:

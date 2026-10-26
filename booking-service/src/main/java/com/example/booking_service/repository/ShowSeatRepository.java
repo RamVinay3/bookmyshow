@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
@@ -65,6 +66,7 @@ public interface ShowSeatRepository
     update ShowSeat s
        set s.status = 'AVAILABLE',
            s.lockedBy = null,
+           s.bookingId = null,
            s.lockedUntil = null
      where s.showId = :showId
        and s.seatId in :seatIds
@@ -93,5 +95,57 @@ public interface ShowSeatRepository
             @Param("seatId") Long seatId,
             @Param("bookingId") String bookingId,
             @Param("now") LocalDateTime now
+    );
+
+
+    @Query("""
+    select s.price
+    from ShowSeat s
+    where s.showId = :showId
+      and s.seatId in :seatIds
+""")
+    List<BigDecimal> findPricesByShowIdAndSeatIds(
+            @Param("showId") Long showId,
+            @Param("seatIds") List<Long> seatIds
+    );
+
+
+    @Query("""
+    select s
+    from ShowSeat s
+    where s.showId = :showId
+      and s.seatId in :seatIds
+      and s.status = 'LOCKED'
+      and s.lockedBy = :userId
+      and s.bookingId = :bookingId
+      and s.lockedUntil > :now
+""")
+    List<ShowSeat> findSeatsLockedForBooking(
+            @Param("showId") Long showId,
+            @Param("seatIds") Collection<Long> seatIds,
+            @Param("userId") String userId,
+            @Param("bookingId") String bookingId,
+            @Param("now") LocalDateTime now
+    );
+
+
+    @Modifying
+    @Query("""
+    update ShowSeat s
+       set s.status = 'AVAILABLE',
+           s.lockedBy = null,
+           s.bookingId = null,
+           s.lockedUntil = null
+     where s.showId = :showId
+       and s.seatId in :seatIds
+       and s.status = 'LOCKED'
+       and s.lockedBy = :userId
+       and s.bookingId = :bookingId
+""")
+    int releaseBookingLocks(
+            @Param("showId") Long showId,
+            @Param("seatIds") Collection<Long> seatIds,
+            @Param("userId") String userId,
+            @Param("bookingId") String bookingId
     );
 }
