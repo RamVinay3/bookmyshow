@@ -57,4 +57,11 @@ public class BookingController {
 
         return bookingOrchestrator.bookSeats(request);
     }
+
+    @PostMapping("/{bookingId}/payment")
+    public BookingOrchestrator.BookingResponse initiatePayment(
+            @PathVariable String bookingId) {
+
+        return bookingOrchestrator.initiatePayment(bookingId);
+    }
 }

@@ -21,6 +21,7 @@ public interface ShowSeatRepository
 
     boolean existsByShowIdAndSeatId(Long showId, Long seatId);
 
+    List<ShowSeat> findByBookingId(String bookingId);
 
     @Modifying
     @Query("""

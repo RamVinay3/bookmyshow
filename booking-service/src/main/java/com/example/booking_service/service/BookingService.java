@@ -224,6 +224,8 @@ public class BookingService {
                 );
             }
         }
+
+
     }
 
     public BigDecimal calculateTotalPrice(
