@@ -40,4 +40,13 @@ public class BookingController {
             @Valid @RequestBody SeatLockRequest request) {
         bookingService.releaseSeats(request);
     }
+    @PostMapping("/confirm/{bookingId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmBooking(
+            @PathVariable String bookingId,
+            @RequestParam Long showId,
+            @RequestBody List<Long> seatIds
+    ) {
+        bookingService.confirmBooking(bookingId, showId, seatIds);
+    }
 }

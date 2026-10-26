@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -85,7 +86,7 @@ public class BookingService {
                     "No seat prices configured for this show"
             );
         }
-        Map<String, java.math.BigDecimal> priceBySeatType =
+        Map<String, BigDecimal> priceBySeatType =
                 configuredPrices.stream()
                         .collect(Collectors.toMap(
                                 SeatTypePrice::seatType,
@@ -117,7 +118,8 @@ public class BookingService {
                             SeatType.valueOf(
                                     seatType
                             ),
-                            price
+                            price,
+                            "hi"
                     );
                 })
                 .toList();
@@ -146,12 +148,14 @@ public class BookingService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiry = now.plusMinutes(5);
+        String bookingId = UUID.randomUUID().toString();
 
         for (Long seatId : seatIds) {
             int updated = seatRepository.lockSeat(
                     request.showId(),
                     seatId,
                     request.userId(),
+                    bookingId,
                     expiry,
                     now
             );
@@ -165,6 +169,7 @@ public class BookingService {
         }
 
         return new SeatLockResponse(
+                bookingId,
                 request.showId(),
                 seatIds,
                 expiry,
@@ -179,5 +184,48 @@ public class BookingService {
                 request.seatIds(),
                 request.userId()
         );
+    }
+
+    @Transactional
+    public void confirmBooking(
+            String bookingId,
+            Long showId,
+            List<Long> seatIds
+    ) {
+
+        if (seatIds == null || seatIds.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "At least one seat is required"
+            );
+        }
+
+        if (new HashSet<>(seatIds).size() != seatIds.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Duplicate seat IDs are not allowed"
+            );
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Long seatId : seatIds) {
+
+            int updated = seatRepository.confirmSeat(
+                    showId,
+                    seatId,
+                    bookingId,
+                    now
+            );
+
+            if (updated != 1) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Seat " + seatId
+                                + " is no longer locked by this booking "
+                                + "or its lock has expired."
+                );
+            }
+        }
     }
 }

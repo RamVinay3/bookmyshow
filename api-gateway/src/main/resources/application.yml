@@ -17,7 +17,18 @@ spring:
                uri: lb://booking-service
                predicates:
                  - Path=/api/booking/**
-
+             - id: user-service
+               uri: lb://user-service
+               predicates:
+                   - Path=/api/users/**
+             - id: wallet-service
+               uri: lb://wallet-service
+               predicates:
+                 - Path=/api/wallet/**
+             - id: theatre-service
+               uri: lb://theatre-service
+               predicates:
+                 - Path=/api/theatre/**
 
 eureka:
   client:

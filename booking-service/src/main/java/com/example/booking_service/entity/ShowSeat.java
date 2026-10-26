@@ -56,37 +56,44 @@ public class ShowSeat {
     @Column(name = "PRICE", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "BOOKING_ID",length = 36)
+    private String bookingId;
+
     protected ShowSeat() {
     }
 
     public ShowSeat(Long showId, Long seatId,
                     String rowLabel, Integer seatNumber, SeatType seatType,
-                    BigDecimal price) {
+                    BigDecimal price,String bookingId) {
         this.showId = showId;
         this.seatId = seatId;
         this.rowLabel = rowLabel;
         this.seatNumber = seatNumber;
         this.seatType = seatType;
         this.price = price;
+        this.bookingId = bookingId;
     }
 
 
 
-    public void lock(String userId, LocalDateTime expiry) {
+    public void lock(String userId,String bookingId, LocalDateTime expiry) {
         this.status = SeatStatus.LOCKED;
         this.lockedBy = userId;
         this.lockedUntil = expiry;
+        this.bookingId=bookingId;
     }
 
     public void release() {
         this.status = SeatStatus.AVAILABLE;
         this.lockedBy = null;
         this.lockedUntil = null;
+        this.bookingId = null;
     }
 
     public void book() {
         this.status = SeatStatus.BOOKED;
         this.lockedBy = null;
         this.lockedUntil = null;
+        this.bookingId = null;
     }
 }

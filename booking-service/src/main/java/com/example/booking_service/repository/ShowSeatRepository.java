@@ -26,6 +26,7 @@ public interface ShowSeatRepository
     update ShowSeat s
        set s.status = 'LOCKED',
            s.lockedBy = :userId,
+           s.bookingId = :bookingId,
            s.lockedUntil = :expiry
      where s.showId = :showId
        and s.seatId = :seatId
@@ -38,6 +39,7 @@ public interface ShowSeatRepository
             @Param("showId") Long showId,
             @Param("seatId") Long seatId,
             @Param("userId") String userId,
+            @Param("bookingId") String bookingId,
             @Param("expiry") LocalDateTime expiry,
             @Param("now") LocalDateTime now
     );
@@ -47,6 +49,7 @@ public interface ShowSeatRepository
     update ShowSeat s
        set s.status = 'AVAILABLE',
            s.lockedBy = null,
+           s.bookingId = null,
            s.lockedUntil = null
      where s.showId = :showId
        and s.status = 'LOCKED'
@@ -72,5 +75,23 @@ public interface ShowSeatRepository
             @Param("showId") Long showId,
             @Param("seatIds") Collection<Long> seatIds,
             @Param("userId") String userId
+    );
+
+    @Modifying
+    @Query("""
+    update ShowSeat s
+       set s.status = 'BOOKED',
+           s.lockedUntil = null
+     where s.showId = :showId
+       and s.seatId = :seatId
+       and s.status = 'LOCKED'
+       and s.bookingId = :bookingId
+       and s.lockedUntil > :now
+    """)
+    int confirmSeat(
+            @Param("showId") Long showId,
+            @Param("seatId") Long seatId,
+            @Param("bookingId") String bookingId,
+            @Param("now") LocalDateTime now
     );
 }
