@@ -64,3 +64,5 @@ resilience4j:
         automaticTransitionFromOpenToHalfOpenEnabled: true
         maxAttempts: 3
         waitDuration: 500ms
+        ignoreExceptions:
+          - com.example.booking_service.exception.MovieNotFoundException

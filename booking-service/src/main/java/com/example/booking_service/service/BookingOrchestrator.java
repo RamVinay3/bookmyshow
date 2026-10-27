@@ -1,5 +1,6 @@
 package com.example.booking_service.service;
 
+import com.example.booking_service.common.BookingSagaStatus;
 import com.example.booking_service.dto.request.SeatLockRequest;
 import com.example.booking_service.dto.response.SeatLockResponse;
 import com.example.booking_service.dto.response.ShowSeatResponse;
@@ -24,7 +25,7 @@ public class BookingOrchestrator {
     private final BookingService bookingService;
     private final WalletClient walletClient;
     private final ShowSeatRepository seatRepository;
-
+    private final BookingSagaService bookingSagaService;
 
     public BookingResponse bookSeats(SeatLockRequest request) {
 
@@ -225,6 +226,11 @@ public class BookingOrchestrator {
 
         Long walletUserId = parseUserId(userId);
 
+        bookingSagaService.updateSaga(
+                bookingId,
+                BookingSagaStatus.PAYMENT_PENDING,
+                total
+        );
         // 5. Debit the wallet.
         try {
             walletClient.debit(walletUserId, total, bookingId);
@@ -234,14 +240,22 @@ public class BookingOrchestrator {
                 bookingService.releaseBookingLocks(
                         showId, seatIds, userId, bookingId
                 );
-
+                bookingSagaService.updateSaga(
+                        bookingId,
+                        BookingSagaStatus.FAILED,
+                        total
+                );
                 throw new ResponseStatusException(
                         HttpStatus.PAYMENT_REQUIRED,
                         "Wallet rejected the payment",
                         ex
                 );
             }
-
+            bookingSagaService.updateSaga(
+                    bookingId,
+                    BookingSagaStatus.PAYMENT_OUTCOME_UNKNOWN,
+                    total
+            );
             // The debit outcome may be unknown.
             // Keep the lock and reconcile using the same booking ID.
             throw new ResponseStatusException(
@@ -250,13 +264,30 @@ public class BookingOrchestrator {
                     ex
             );
         } catch (RuntimeException ex) {
+
+            bookingSagaService.updateSaga(
+                    bookingId,
+                    BookingSagaStatus.PAYMENT_OUTCOME_UNKNOWN,
+                    total
+            );
+
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Payment outcome is unknown; reconcile before retrying",
                     ex
             );
         }
+        bookingSagaService.updateSaga(
+                bookingId,
+                BookingSagaStatus.PAYMENT_DEBITED,
+                total
+        );
 
+        bookingSagaService.updateSaga(
+                bookingId,
+                BookingSagaStatus.CONFIRMATION_PENDING,
+                total
+        );
         // 6. Confirm the seats.
         try {
 
@@ -265,6 +296,12 @@ public class BookingOrchestrator {
 
         } catch (RuntimeException confirmationFailure) {
 
+
+            bookingSagaService.updateSaga(
+                    bookingId,
+                    BookingSagaStatus.REFUND_PENDING,
+                    total
+            );
             // Payment succeeded but confirmation failed: refund.
             try {
                 walletClient.refund(walletUserId, total, bookingId);
@@ -276,11 +313,16 @@ public class BookingOrchestrator {
             } catch (RuntimeException refundFailure) {
                 throw new ResponseStatusException(
                         HttpStatus.SERVICE_UNAVAILABLE,
-                        "Confirmation and refund require reconciliation. "
+                        "Confirmation and refu  nd require reconciliation. "
                                 + "Booking ID: " + bookingId,
                         refundFailure
                 );
             }
+            bookingSagaService.updateSaga(
+                    bookingId,
+                    BookingSagaStatus.REFUNDED,
+                    total
+            );
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -288,6 +330,12 @@ public class BookingOrchestrator {
                     confirmationFailure
             );
         }
+
+        bookingSagaService.updateSaga(
+                bookingId,
+                BookingSagaStatus.CONFIRMED,
+                total
+        );
 
         return new BookingResponse(
                 bookingId, showId, seatIds, total, "CONFIRMED"

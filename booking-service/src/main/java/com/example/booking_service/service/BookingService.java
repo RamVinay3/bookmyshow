@@ -26,8 +26,7 @@ public class BookingService {
     private final ShowSeatRepository seatRepository;
     private final ShowClient showClient;
     private final TheatreClient theatreClient;
-    private final WalletClient walletClient;
-
+    private final BookingSagaService bookingSagaService;
 
 
     @Transactional
@@ -164,6 +163,8 @@ public class BookingService {
                                 + " is unavailable. Refresh the seat map.");
             }
         }
+
+        bookingSagaService.createSaga(bookingId,Long.parseLong(request.userId()),request.showId());
 
         return new SeatLockResponse(
                 bookingId,
