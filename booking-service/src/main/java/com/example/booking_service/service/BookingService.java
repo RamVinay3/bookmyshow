@@ -3,6 +3,7 @@ package com.example.booking_service.service;
 import com.example.booking_service.common.SeatType;
 import com.example.booking_service.dto.request.SeatLockRequest;
 import com.example.booking_service.dto.response.*;
+import com.example.booking_service.entity.SeatStatus;
 import com.example.booking_service.entity.ShowSeat;
 import com.example.booking_service.repository.ShowSeatRepository;
 import lombok.AllArgsConstructor;
@@ -188,7 +189,6 @@ public class BookingService {
             Long showId,
             List<Long> seatIds
     ) {
-
         if (seatIds == null || seatIds.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -203,11 +203,47 @@ public class BookingService {
             );
         }
 
+        // 1. Lock all requested seat rows.
+        List<ShowSeat> seats =
+                seatRepository.findSeatsForUpdate(showId, seatIds);
 
+        if (seats.size() != seatIds.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "One or more seats were not found for this show"
+            );
+        }
+
+        // 2. If every seat is already booked for this booking,
+        //    treat this request as an idempotent retry.
+        boolean alreadyBooked = seats.stream().allMatch(seat ->
+                seat.getStatus() == SeatStatus.BOOKED
+                        && Objects.equals(seat.getBookingId(), bookingId)
+        );
+
+        if (alreadyBooked) {
+            return;
+        }
+
+        // 3. Verify that every seat is still locked by this booking.
         LocalDateTime now = LocalDateTime.now();
 
-        for (Long seatId : seatIds) {
+        boolean validLocks = seats.stream().allMatch(seat ->
+                seat.getStatus() == SeatStatus.LOCKED
+                        && Objects.equals(seat.getBookingId(), bookingId)
+                        && seat.getLockedUntil() != null
+                        && seat.getLockedUntil().isAfter(now)
+        );
 
+        if (!validLocks) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Seats are not locked by this booking or their locks have expired"
+            );
+        }
+
+        // 4. Confirm each seat using your existing conditional update.
+        for (Long seatId : seatIds) {
             int updated = seatRepository.confirmSeat(
                     showId,
                     seatId,
@@ -218,14 +254,10 @@ public class BookingService {
             if (updated != 1) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "Seat " + seatId
-                                + " is no longer locked by this booking "
-                                + "or its lock has expired."
+                        "Could not confirm seat " + seatId
                 );
             }
         }
-
-
     }
 
     public BigDecimal calculateTotalPrice(

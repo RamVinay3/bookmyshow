@@ -1,7 +1,9 @@
 package com.example.booking_service.repository;
 
 import com.example.booking_service.entity.ShowSeat;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Query;
@@ -148,5 +150,19 @@ public interface ShowSeatRepository
             @Param("seatIds") Collection<Long> seatIds,
             @Param("userId") String userId,
             @Param("bookingId") String bookingId
+    );
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT s
+    FROM ShowSeat s
+    WHERE s.showId = :showId
+      AND s.seatId IN :seatIds
+    ORDER BY s.id
+    """)
+    List<ShowSeat> findSeatsForUpdate(
+            @Param("showId") Long showId,
+            @Param("seatIds") Collection<Long> seatIds
     );
 }
