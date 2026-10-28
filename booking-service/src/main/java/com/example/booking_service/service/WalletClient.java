@@ -55,6 +55,21 @@ public class WalletClient {
                 .block();
     }
 
+    public WalletTransactionLookupResponse findBookingDebit(
+            Long userId,
+            String bookingId
+    ) {
+        return client.get()
+                .uri(
+                        "/api/wallets/{userId}/transactions/booking/{bookingId}/debit",
+                        userId,
+                        bookingId
+                )
+                .retrieve()
+                .bodyToMono(WalletTransactionLookupResponse.class)
+                .block();
+    }
+
     public record AmountRequest(
             BigDecimal amount,
             String referenceId,
@@ -71,5 +86,11 @@ public class WalletClient {
             String referenceId,
             String description,
             java.time.LocalDateTime createdAt) {
+    }
+
+    public record WalletTransactionLookupResponse(
+            boolean found,
+            WalletTransactionResponse transaction
+    ) {
     }
 }

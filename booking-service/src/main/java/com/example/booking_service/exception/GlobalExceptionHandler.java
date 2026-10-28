@@ -27,8 +27,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WebClientRequestException.class)
     public ResponseEntity<Map<String, String>> handleConnectionFailure(
             WebClientRequestException ex) {
+
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(Map.of("error", "Movie Service is unavailable"));
+                .body(Map.of("error", "Service is unavailable"));
     }
 
 

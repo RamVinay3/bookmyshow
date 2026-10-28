@@ -6,6 +6,7 @@ import com.example.booking_service.dto.response.SeatLockResponse;
 import com.example.booking_service.dto.response.ShowSeatResponse;
 import com.example.booking_service.entity.SeatStatus;
 import com.example.booking_service.entity.ShowSeat;
+import com.example.booking_service.messaging.BookingEventProducer;
 import com.example.booking_service.repository.ShowSeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class BookingOrchestrator {
     private final WalletClient walletClient;
     private final ShowSeatRepository seatRepository;
     private final BookingSagaService bookingSagaService;
+    private final BookingEventProducer bookingEventProducer;
 
     public BookingResponse bookSeats(SeatLockRequest request) {
 
@@ -331,6 +333,13 @@ public class BookingOrchestrator {
             );
         }
 
+        bookingEventProducer.publishBookingConfirmed(
+                bookingId,
+                userId,
+                showId,
+                seatIds,
+                total
+        );
         bookingSagaService.updateSaga(
                 bookingId,
                 BookingSagaStatus.CONFIRMED,

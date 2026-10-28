@@ -1,9 +1,6 @@
 package com.example.walletservice.controller;
 
-import com.example.walletservice.dto.AmountRequest;
-import com.example.walletservice.dto.CreateWalletRequest;
-import com.example.walletservice.dto.WalletResponse;
-import com.example.walletservice.dto.WalletTransactionResponse;
+import com.example.walletservice.dto.*;
 import com.example.walletservice.service.WalletService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -44,5 +41,13 @@ public class WalletController {
     @GetMapping("/{userId}/transactions")
     public List<WalletTransactionResponse> history(@PathVariable @Positive Long userId) {
         return walletService.history(userId);
+    }
+
+    @GetMapping("/{userId}/transactions/booking/{bookingId}/debit")
+    public WalletTransactionLookupResponse findBookingDebit(
+            @PathVariable @Positive Long userId,
+            @PathVariable String bookingId
+    ) {
+        return walletService.findBookingDebit(userId, bookingId);
     }
 }

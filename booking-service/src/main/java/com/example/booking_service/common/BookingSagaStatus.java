@@ -9,5 +9,6 @@ public enum BookingSagaStatus {
     REFUND_PENDING,
     REFUNDED,
     FAILED,
-    PAYMENT_OUTCOME_UNKNOWN
+    PAYMENT_OUTCOME_UNKNOWN,
+    EXPIRED
 }

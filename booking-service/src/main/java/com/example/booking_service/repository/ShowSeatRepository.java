@@ -165,4 +165,21 @@ public interface ShowSeatRepository
             @Param("showId") Long showId,
             @Param("seatIds") Collection<Long> seatIds
     );
+
+
+    @Modifying
+    @Query("""
+    update ShowSeat s
+       set s.status = 'AVAILABLE',
+           s.lockedBy = null,
+           s.bookingId = null,
+           s.lockedUntil = null
+     where s.bookingId = :bookingId
+       and s.status = 'LOCKED'
+       and s.lockedUntil <= :now
+    """)
+    int releaseExpiredLocksByBookingId(
+            @Param("bookingId") String bookingId,
+            @Param("now") LocalDateTime now
+    );
 }

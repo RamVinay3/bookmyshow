@@ -1,9 +1,6 @@
 package com.example.walletservice.service;
 
-import com.example.walletservice.dto.AmountRequest;
-import com.example.walletservice.dto.CreateWalletRequest;
-import com.example.walletservice.dto.WalletResponse;
-import com.example.walletservice.dto.WalletTransactionResponse;
+import com.example.walletservice.dto.*;
 import com.example.walletservice.entity.TransactionType;
 import com.example.walletservice.entity.Wallet;
 import com.example.walletservice.entity.WalletTransaction;
@@ -110,7 +107,34 @@ public class WalletService {
         }
         return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(this::toTransaction).toList();
     }
+    @Transactional(readOnly = true)
+    public WalletTransactionLookupResponse findBookingDebit(
+            Long userId,
+            String bookingId
+    ) {
+        var transaction =
+                transactionRepository.findByReferenceIdAndType(
+                        bookingId,
+                        TransactionType.BOOKING_DEBIT
+                );
 
+        if (transaction.isEmpty()) {
+            return new WalletTransactionLookupResponse(false, null);
+        }
+
+        WalletTransaction debit = transaction.get();
+
+        if (!debit.getUserId().equals(userId)) {
+            throw new ConflictException(
+                    "Booking reference does not belong to this user."
+            );
+        }
+
+        return new WalletTransactionLookupResponse(
+                true,
+                toTransaction(debit)
+        );
+    }
     private BigDecimal money(BigDecimal value) { return value.setScale(2, java.math.RoundingMode.UNNECESSARY); }
     private WalletResponse toResponse(Wallet wallet) {
         return new WalletResponse(wallet.getId(), wallet.getUserId(), wallet.getBalance(), wallet.getCreatedAt(), wallet.getUpdatedAt());

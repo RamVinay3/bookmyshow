@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Long> {
     Optional<WalletTransaction> findByReferenceIdAndType(String referenceId, TransactionType type);
     List<WalletTransaction> findByUserIdOrderByCreatedAtDesc(Long userId);
+    
 }
