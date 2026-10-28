@@ -27,7 +27,7 @@ public class BookingEventConsumer {
             groupId = "notification-service"
     )
     public void consumeBookingConfirmed(BookingConfirmedEvent event) {
-        System.out.println("retry happening"+event);
+
         try {
             processedEventService.markProcessed(event);
 
@@ -46,7 +46,8 @@ public class BookingEventConsumer {
                     event.eventId(),
                     event.bookingId()
             );
-            throw ex;
+//            throw ex; if we pass the exception then kafka will consider to execute
+            //otherwise it thinks we handled it well.
         }
     }
 }

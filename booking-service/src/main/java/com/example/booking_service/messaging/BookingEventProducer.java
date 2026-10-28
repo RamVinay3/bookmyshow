@@ -1,6 +1,7 @@
 package com.example.booking_service.messaging;
 
 import com.example.booking_service.events.BookingConfirmedEvent;
+import com.example.booking_service.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,7 +20,7 @@ public class BookingEventProducer {
     private static final String TOPIC = "booking-confirmed";
 
     private final KafkaTemplate<String, BookingConfirmedEvent> kafkaTemplate;
-
+    private final JsonUtil jsonUtil;
     public void publishBookingConfirmed(
             String bookingId,
             String userId,
@@ -49,6 +50,40 @@ public class BookingEventProducer {
                         } else {
                             log.info(
                                     "Published booking event. bookingId={}, partition={}, offset={}",
+                                    bookingId,
+                                    result.getRecordMetadata().partition(),
+                                    result.getRecordMetadata().offset()
+                            );
+                        }
+                    });
+        } catch (RuntimeException exception) {
+            // Do not turn an already-confirmed booking into an API failure.
+            log.error(
+                    "Could not initiate publishing booking event. bookingId={}",
+                    bookingId,
+                    exception
+            );
+        }
+    }
+
+    public void publishBookingConfirmed(
+            String request
+    ) {
+        BookingConfirmedEvent event = jsonUtil.fromJson(request,BookingConfirmedEvent.class);
+        String bookingId=event.bookingId();
+
+        try {
+            kafkaTemplate.send(TOPIC, bookingId, event)
+                    .whenComplete((result, exception) -> {
+                        if (exception != null) {
+                            log.error(
+                                    "Failed to publish booking event. bookingId={}",
+                                    bookingId,
+                                    exception
+                            );
+                        } else {
+                            log.info(
+                                    "Published booking event . bookingId={}, partition={}, offset={}",
                                     bookingId,
                                     result.getRecordMetadata().partition(),
                                     result.getRecordMetadata().offset()

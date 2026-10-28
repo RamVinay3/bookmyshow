@@ -1,11 +1,17 @@
 package com.example.booking_service.service;
 
+import com.example.booking_service.common.EventStatus;
+import com.example.booking_service.common.EventType;
 import com.example.booking_service.common.SeatType;
 import com.example.booking_service.dto.request.SeatLockRequest;
 import com.example.booking_service.dto.response.*;
+import com.example.booking_service.entity.OutBoxEvents;
 import com.example.booking_service.entity.SeatStatus;
 import com.example.booking_service.entity.ShowSeat;
+import com.example.booking_service.events.BookingConfirmedEvent;
+import com.example.booking_service.repository.OutBoxEventRepository;
 import com.example.booking_service.repository.ShowSeatRepository;
+import com.example.booking_service.util.JsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,6 +33,8 @@ public class BookingService {
     private final ShowClient showClient;
     private final TheatreClient theatreClient;
     private final BookingSagaService bookingSagaService;
+    private final OutBoxEventRepository outBoxEventRepository;
+    private final JsonUtil jsonUtil;
 
 
     @Transactional
@@ -188,7 +196,9 @@ public class BookingService {
     public void confirmBooking(
             String bookingId,
             Long showId,
-            List<Long> seatIds
+            List<Long> seatIds,
+            BigDecimal total,
+            String userId
     ) {
         if (seatIds == null || seatIds.isEmpty()) {
             throw new ResponseStatusException(
@@ -259,6 +269,29 @@ public class BookingService {
                 );
             }
         }
+
+
+        BookingConfirmedEvent bookingEvent = new BookingConfirmedEvent(
+                UUID.randomUUID(),
+                bookingId,
+                userId,
+                showId,
+                List.copyOf(seatIds),
+                total,
+                LocalDateTime.now()
+        );
+
+        OutBoxEvents event = new OutBoxEvents(
+                UUID.randomUUID().toString(),
+                bookingId,
+               EventType.BOOKING_CONFIRMED,
+                EventStatus.PENDING,
+                jsonUtil.toJson(bookingEvent));
+
+
+
+        outBoxEventRepository.save(event);
+
     }
 
     public BigDecimal calculateTotalPrice(
