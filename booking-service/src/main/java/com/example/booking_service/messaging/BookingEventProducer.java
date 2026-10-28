@@ -5,12 +5,14 @@ import com.example.booking_service.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -66,37 +68,15 @@ public class BookingEventProducer {
         }
     }
 
-    public void publishBookingConfirmed(
+    public CompletableFuture<SendResult<String, BookingConfirmedEvent>> publishBookingConfirmed(
             String request
     ) {
         BookingConfirmedEvent event = jsonUtil.fromJson(request,BookingConfirmedEvent.class);
         String bookingId=event.bookingId();
 
-        try {
-            kafkaTemplate.send(TOPIC, bookingId, event)
-                    .whenComplete((result, exception) -> {
-                        if (exception != null) {
-                            log.error(
-                                    "Failed to publish booking event. bookingId={}",
-                                    bookingId,
-                                    exception
-                            );
-                        } else {
-                            log.info(
-                                    "Published booking event . bookingId={}, partition={}, offset={}",
-                                    bookingId,
-                                    result.getRecordMetadata().partition(),
-                                    result.getRecordMetadata().offset()
-                            );
-                        }
-                    });
-        } catch (RuntimeException exception) {
-            // Do not turn an already-confirmed booking into an API failure.
-            log.error(
-                    "Could not initiate publishing booking event. bookingId={}",
-                    bookingId,
-                    exception
-            );
-        }
+
+         return    kafkaTemplate.send(TOPIC, bookingId, event);
+
+
     }
 }

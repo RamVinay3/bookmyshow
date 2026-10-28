@@ -30,9 +30,11 @@ public class OutboxPublisher {
 
         for (OutBoxEvents event : events) {
             try {
-                bookingEventProducer.publishBookingConfirmed(event.getPayload());
+                bookingEventProducer.publishBookingConfirmed(event.getPayload()).get();
 
                 markAsPublished(event.getEventId());
+                log.info("Outbox event published. eventId={}",
+                        event.getEventId());
 
             } catch (Exception ex) {
                 // Leave it PENDING so a later poll can retry.

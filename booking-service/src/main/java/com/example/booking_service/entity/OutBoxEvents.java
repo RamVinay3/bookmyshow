@@ -49,7 +49,7 @@ public class OutBoxEvents {
 
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
-        publishedAt = now;
+
 
     }
 

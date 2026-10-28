@@ -270,9 +270,9 @@ public class BookingService {
             }
         }
 
-
+        UUID eventId = UUID.randomUUID();
         BookingConfirmedEvent bookingEvent = new BookingConfirmedEvent(
-                UUID.randomUUID(),
+                eventId,
                 bookingId,
                 userId,
                 showId,
@@ -282,7 +282,7 @@ public class BookingService {
         );
 
         OutBoxEvents event = new OutBoxEvents(
-                UUID.randomUUID().toString(),
+                eventId.toString(),
                 bookingId,
                EventType.BOOKING_CONFIRMED,
                 EventStatus.PENDING,
