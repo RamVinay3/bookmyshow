@@ -21,7 +21,7 @@ public class KafkaRetryConfig {
                 new DeadLetterPublishingRecoverer(
                         kafkaTemplate,
                         (record, exception) ->
-                                new TopicPartition(record.topic(), -1)
+                                new TopicPartition(record.topic()+"-dlq", -1)
                 );
 
         // Retry 3 times, waiting 1 second between attempts.
@@ -31,19 +31,6 @@ public class KafkaRetryConfig {
     }
 
 
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object>
-    kafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> consumerFactory,
-            DefaultErrorHandler kafkaErrorHandler) {
 
-        var factory =
-                new ConcurrentKafkaListenerContainerFactory<String, Object>();
-
-        factory.setConsumerFactory(consumerFactory);
-        factory.setCommonErrorHandler(kafkaErrorHandler);
-
-        return factory;
-    }
 
 }
