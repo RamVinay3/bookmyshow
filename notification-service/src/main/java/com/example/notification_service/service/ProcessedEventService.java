@@ -2,6 +2,7 @@ package com.example.notification_service.service;
 
 import com.example.notification_service.events.BookingConfirmedEvent;
 import com.example.notification_service.entity.ProcessedEvent;
+import com.example.notification_service.exception.DuplicateEventException;
 import com.example.notification_service.respository.ProcessedEventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,15 @@ public class ProcessedEventService {
 
     @Transactional
     public void markProcessed(BookingConfirmedEvent event) {
+
+        String eventId = event.eventId().toString();
+
+        if (repository.existsById(eventId)) {
+            throw new DuplicateEventException(
+                    "Event already processed: " + eventId
+            );
+        }
+
         repository.saveAndFlush(
                 new ProcessedEvent(
                         event.eventId().toString(),

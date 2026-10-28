@@ -1,6 +1,7 @@
 package com.example.notification_service.messaging;
 
 import com.example.notification_service.events.BookingConfirmedEvent;
+import com.example.notification_service.exception.DuplicateEventException;
 import com.example.notification_service.service.ProcessedEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class BookingEventConsumer {
             groupId = "notification-service"
     )
     public void consumeBookingConfirmed(BookingConfirmedEvent event) {
+        System.out.println("retry happening"+event);
         try {
             processedEventService.markProcessed(event);
 
@@ -38,12 +40,13 @@ public class BookingEventConsumer {
                     event.totalAmount()
             );
 
-        } catch (Exception ex) {
+        } catch (DuplicateEventException ex) {
             log.info(
-                    "Duplicate booking event skipped. eventId={}, bookingId={}",
+                    "Duplicate booking event Detected. eventId={}, bookingId={}",
                     event.eventId(),
                     event.bookingId()
             );
+            throw ex;
         }
     }
 }
