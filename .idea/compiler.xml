@@ -7,12 +7,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="show-service" />
         <module name="api-gateway" />
         <module name="theatre-service" />
-        <module name="show-service" />
         <module name="user-service" />
         <module name="service-discovery" />
         <module name="wallet-service" />
+        <module name="notification-service" />
       </profile>
       <profile name="Annotation profile for booking-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -40,6 +41,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="booking-service" options="-parameters" />
       <module name="movie-service" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
       <module name="service-discovery" options="-parameters" />
       <module name="show-service" options="-parameters" />
       <module name="theatre-service" options="-parameters" />
