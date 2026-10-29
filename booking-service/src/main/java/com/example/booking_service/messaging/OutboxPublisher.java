@@ -23,10 +23,11 @@ public class OutboxPublisher {
     private final BookingEventProducer bookingEventProducer;
 
     @Scheduled(fixedDelay = 2000)
+    @Transactional
     public void publishPendingEvents() {
 
         List<OutBoxEvents> events =
-                outboxRepository.findTop100ByStatusOrderByCreatedAtAsc(EventStatus.PENDING);
+                outboxRepository.lockPendingEvents();
 
         for (OutBoxEvents event : events) {
             try {
