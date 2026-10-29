@@ -5,12 +5,15 @@ import com.example.showservice.dto.*;
 import com.example.showservice.entity.*;
 import com.example.showservice.exception.*;
 import com.example.showservice.repository.MovieShowRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.util.List;
-
+@Slf4j
 @Service
 @Transactional
 public class ShowService {
@@ -34,7 +37,9 @@ public class ShowService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "showDetails", key = "#id")
     public ShowResponse get(Long id) {
+        log.info("Method Call -id: {}",id);
         return response(find(id));
     }
 
@@ -44,6 +49,7 @@ public class ShowService {
         return repo.searchShows(movieId, theatreId, ShowStatus.SCHEDULED, d.atStartOfDay(), d.plusDays(1).atStartOfDay()).stream().map(this::response).toList();
     }
 
+    @CacheEvict(value = "showDetails", key = "#id")
     public ShowResponse update(Long id, UpdateShowRequest r) {
         MovieShow s = find(id);
         if (s.getStatus() == ShowStatus.CANCELLED) throw new ConflictException("A cancelled show cannot be updated.");
@@ -69,6 +75,7 @@ public class ShowService {
     }
 
     private MovieShow find(Long id) {
+
         return repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Show " + id + " was not found."));
     }
 

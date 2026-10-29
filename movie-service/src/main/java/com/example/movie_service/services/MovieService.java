@@ -10,6 +10,7 @@ import com.example.movie_service.repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class MovieService {
         return movieMapper.entityToResponse(movies);
     }
 
+    @Cacheable(value = "movieDetails", key = "#id")
     public MovieResponseDTO findById(Long id) throws InterruptedException {
         Movie movie= movieRepository.findById(id)
                 .orElseThrow(() ->
